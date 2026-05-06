@@ -1,0 +1,22 @@
+# Dependencies — installed inside the container by Composer
+vendor/
+node_modules/
+
+# Local environment file — teammates use .env.example to create their own
+.env
+
+# Git history is not needed inside the image
+.git/
+.gitignore
+
+# Test artifacts
+.phpunit.result.cache
+
+# Editor files
+.idea/
+.vscode/
+*.swp
+
+# OS files
+.DS_Store
+Thumbs.db

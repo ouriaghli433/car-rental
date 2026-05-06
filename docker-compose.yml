@@ -1,0 +1,53 @@
+services:
+
+  # -----------------------------------------------------------------------
+  # app — Laravel API server (PHP 8.2)
+  # Runs migrations automatically on first start, then serves on port 8000.
+  # -----------------------------------------------------------------------
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    volumes:
+      # Mount source code so code changes don't require rebuilding the image
+      - .:/var/www/html
+      # Exclude vendor from the mount — use the one built inside the image
+      - /var/www/html/vendor
+    env_file:
+      - .env
+    environment:
+      # Override DB_HOST so the app talks to the 'db' container, not localhost
+      DB_HOST: db
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # -----------------------------------------------------------------------
+  # db — PostgreSQL 15
+  # Data is persisted in a named volume so it survives container restarts.
+  # -----------------------------------------------------------------------
+  db:
+    image: postgres:15-alpine
+    ports:
+      # Expose on host so you can connect with pgAdmin or DBeaver if needed
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: ${DB_DATABASE:-car_rental}
+      POSTGRES_USER: ${DB_USERNAME:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-secret}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      # Compose waits until postgres is actually accepting connections before starting 'app'
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME:-postgres} -d ${DB_DATABASE:-car_rental}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+# Named volume — data persists between 'docker compose down' and 'up'
+volumes:
+  pgdata:
