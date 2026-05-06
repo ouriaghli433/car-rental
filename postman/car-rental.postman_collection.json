@@ -1,0 +1,386 @@
+{
+  "info": {
+    "_postman_id": "car-rental-collection-v2",
+    "name": "Car Rental API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": "Car Rental Laravel API\n\nFlow: Register (agency_owner) → Login → Create Agency → Admin approves → Create Car → Register (client) → Login → Create Reservation → Agency confirms → Client pickup → Review\n\nReservation dates format: YYYY-MM-DD HH:MM (e.g. 2027-07-01 17:00)\nMaintenance / search filter dates: YYYY-MM-DD"
+  },
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Register",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["if(pm.response.json().token) pm.environment.set('token', pm.response.json().token);"] } }],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Accept", "value": "application/json" }, { "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/register", "host": ["{{base_url}}"], "path": ["register"] },
+            "body": { "mode": "raw", "raw": "{\n  \"first_name\": \"John\",\n  \"last_name\": \"Doe\",\n  \"email\": \"john@example.com\",\n  \"password\": \"123456789\",\n  \"password_confirmation\": \"123456789\",\n  \"role\": \"client\"\n}" }
+          }
+        },
+        {
+          "name": "Login",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["if(pm.response.json().token) pm.environment.set('token', pm.response.json().token);"] } }],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Accept", "value": "application/json" }, { "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/login", "host": ["{{base_url}}"], "path": ["login"] },
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"admin@test.com\",\n  \"password\": \"123456\"\n}" }
+          }
+        },
+        {
+          "name": "Me",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{base_url}}/me", "host": ["{{base_url}}"], "path": ["me"] }
+          }
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Accept", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{base_url}}/logout", "host": ["{{base_url}}"], "path": ["logout"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Cities",
+      "item": [
+        {
+          "name": "List Cities",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/cities", "host": ["{{base_url}}"], "path": ["cities"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Cars",
+      "item": [
+        {
+          "name": "List Cars",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": {
+              "raw": "{{base_url}}/cars",
+              "host": ["{{base_url}}"],
+              "path": ["cars"],
+              "query": [
+                { "key": "city_id",      "value": "",       "disabled": true },
+                { "key": "type",         "value": "sedan",  "disabled": true, "description": "sedan | suv | van" },
+                { "key": "transmission", "value": "automatic", "disabled": true, "description": "automatic | manual" },
+                { "key": "min_price",    "value": "",       "disabled": true },
+                { "key": "max_price",    "value": "",       "disabled": true },
+                { "key": "start_date",   "value": "2027-07-01", "disabled": true, "description": "YYYY-MM-DD" },
+                { "key": "end_date",     "value": "2027-07-07", "disabled": true, "description": "YYYY-MM-DD" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Car",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/cars/{{car_id}}", "host": ["{{base_url}}"], "path": ["cars", "{{car_id}}"] }
+          }
+        },
+        {
+          "name": "Create Car",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["var d=pm.response.json(); if(d.data&&d.data.id) pm.environment.set('car_id',d.data.id);"] } }],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Accept", "value": "application/json" }, { "key": "Content-Type", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{base_url}}/cars", "host": ["{{base_url}}"], "path": ["cars"] },
+            "body": { "mode": "raw", "raw": "{\n  \"brand\": \"Toyota\",\n  \"model\": \"Corolla\",\n  \"year\": 2023,\n  \"color\": \"White\",\n  \"plate_number\": \"ABC-1234\",\n  \"type\": \"sedan\",\n  \"transmission\": \"automatic\",\n  \"seats\": 5,\n  \"price_per_day\": 250,\n  \"description\": \"Clean sedan.\"\n}" }
+          }
+        },
+        {
+          "name": "Update Car",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Accept", "value": "application/json" }, { "key": "Content-Type", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{base_url}}/cars/{{car_id}}", "host": ["{{base_url}}"], "path": ["cars", "{{car_id}}"] },
+            "body": { "mode": "raw", "raw": "{\n  \"price_per_day\": 300,\n  \"status\": \"available\"\n}" }
+          }
+        },
+        {
+          "name": "Delete Car",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Accept", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{base_url}}/cars/{{car_id}}", "host": ["{{base_url}}"], "path": ["cars", "{{car_id}}"] }
+          }
+        },
+        {
+          "name": "Add Car Image",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["var d=pm.response.json(); if(d.data&&d.data.id) pm.environment.set('image_id',d.data.id);"] } }],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Accept", "value": "application/json" }, { "key": "Content-Type", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{base_url}}/cars/{{car_id}}/images", "host": ["{{base_url}}"], "path": ["cars", "{{car_id}}", "images"] },
+            "body": { "mode": "raw", "raw": "{\n  \"image_url\": \"https://picsum.photos/800/600\",\n  \"is_primary\": true\n}" }
+          }
+        },
+        {
+          "name": "Remove Car Image",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Accept", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{base_url}}/cars/{{car_id}}/images/{{image_id}}", "host": ["{{base_url}}"], "path": ["cars", "{{car_id}}", "images", "{{image_id}}"] }
+          }
+        },
+        {
+          "name": "Schedule Maintenance",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["var d=pm.response.json(); if(d.data&&d.data.id) pm.environment.set('period_id',d.data.id);"] } }],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Accept", "value": "application/json" }, { "key": "Content-Type", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{base_url}}/cars/{{car_id}}/maintenance", "host": ["{{base_url}}"], "path": ["cars", "{{car_id}}", "maintenance"] },
+            "body": { "mode": "raw", "raw": "{\n  \"start_date\": \"2027-08-01\",\n  \"end_date\": \"2027-08-05\",\n  \"reason\": \"Annual inspection\"\n}" }
+          }
+        },
+        {
+          "name": "Remove Maintenance",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Accept", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{base_url}}/cars/{{car_id}}/maintenance/{{period_id}}", "host": ["{{base_url}}"], "path": ["cars", "{{car_id}}", "maintenance", "{{period_id}}"] }
+          }
+        },
+        {
+          "name": "Car Reviews",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/cars/{{car_id}}/reviews", "host": ["{{base_url}}"], "path": ["cars", "{{car_id}}", "reviews"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Agencies",
+      "item": [
+        {
+          "name": "List Agencies",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/agencies", "host": ["{{base_url}}"], "path": ["agencies"] }
+          }
+        },
+        {
+          "name": "Get Agency",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{base_url}}/agencies/{{agency_id}}", "host": ["{{base_url}}"], "path": ["agencies", "{{agency_id}}"] }
+          }
+        },
+        {
+          "name": "Create Agency",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["var d=pm.response.json(); if(d.data&&d.data.id) pm.environment.set('agency_id',d.data.id);"] } }],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Accept", "value": "application/json" }, { "key": "Content-Type", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{base_url}}/agencies", "host": ["{{base_url}}"], "path": ["agencies"] },
+            "body": { "mode": "raw", "raw": "{\n  \"name\": \"My Rental Agency\",\n  \"city_id\": \"{{city_id}}\",\n  \"address\": \"12 Rue Hassan II, Tangier\",\n  \"phone\": \"0661234567\",\n  \"email\": \"contact@myagency.ma\",\n  \"description\": \"Premium fleet in Tangier.\"\n}" }
+          }
+        },
+        {
+          "name": "Update Agency (queued for admin approval)",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Accept", "value": "application/json" }, { "key": "Content-Type", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{base_url}}/agencies/{{agency_id}}", "host": ["{{base_url}}"], "path": ["agencies", "{{agency_id}}"] },
+            "body": { "mode": "raw", "raw": "{\n  \"address\": \"99 Avenue Mohammed V\",\n  \"phone\": \"0669999999\"\n}" },
+            "description": "Changes are saved as pending_changes and only go live after admin approval."
+          }
+        },
+        {
+          "name": "Agency Reviews",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": { "raw": "{{base_url}}/agencies/{{agency_id}}/reviews", "host": ["{{base_url}}"], "path": ["agencies", "{{agency_id}}", "reviews"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Reservations",
+      "item": [
+        {
+          "name": "List Reservations",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": {
+              "raw": "{{base_url}}/reservations",
+              "host": ["{{base_url}}"],
+              "path": ["reservations"],
+              "query": [
+                { "key": "status", "value": "", "disabled": true, "description": "pending | confirmed | cancelled | completed" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Reservation",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{base_url}}/reservations/{{reservation_id}}", "host": ["{{base_url}}"], "path": ["reservations", "{{reservation_id}}"] }
+          }
+        },
+        {
+          "name": "Create Reservation",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["var d=pm.response.json(); if(d.data&&d.data.id) pm.environment.set('reservation_id',d.data.id);"] } }],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Accept", "value": "application/json" }, { "key": "Content-Type", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{base_url}}/reservations", "host": ["{{base_url}}"], "path": ["reservations"] },
+            "body": { "mode": "raw", "raw": "{\n  \"car_id\": \"{{car_id}}\",\n  \"start_date\": \"2027-07-01 17:00\",\n  \"end_date\": \"2027-07-07 17:00\"\n}" },
+            "description": "Dates: YYYY-MM-DD HH:MM\nBilling: ceil(hours/24) × price_per_day\nExpires in 1 hour if agency does not confirm."
+          }
+        },
+        {
+          "name": "Confirm Reservation (agency)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Accept", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{base_url}}/reservations/{{reservation_id}}/confirm", "host": ["{{base_url}}"], "path": ["reservations", "{{reservation_id}}", "confirm"] }
+          }
+        },
+        {
+          "name": "Confirm Pickup (client)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Accept", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{base_url}}/reservations/{{reservation_id}}/pickup", "host": ["{{base_url}}"], "path": ["reservations", "{{reservation_id}}", "pickup"] }
+          }
+        },
+        {
+          "name": "Cancel Reservation",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Accept", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{base_url}}/reservations/{{reservation_id}}/cancel", "host": ["{{base_url}}"], "path": ["reservations", "{{reservation_id}}", "cancel"] }
+          }
+        },
+        {
+          "name": "Post Review",
+          "event": [{ "listen": "test", "script": { "type": "text/javascript", "exec": ["var d=pm.response.json(); if(d.data&&d.data.id) pm.environment.set('review_id',d.data.id);"] } }],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Accept", "value": "application/json" }, { "key": "Content-Type", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{base_url}}/reservations/{{reservation_id}}/review", "host": ["{{base_url}}"], "path": ["reservations", "{{reservation_id}}", "review"] },
+            "body": { "mode": "raw", "raw": "{\n  \"car_rating\": 5,\n  \"agency_rating\": 4,\n  \"comment\": \"Great experience!\"\n}" }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Payments",
+      "item": [
+        {
+          "name": "List Payments",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{base_url}}/payments", "host": ["{{base_url}}"], "path": ["payments"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Admin",
+      "item": [
+        {
+          "name": "List Users",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": {
+              "raw": "{{base_url}}/admin/users",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "users"],
+              "query": [{ "key": "withTrashed", "value": "1", "disabled": true }]
+            }
+          }
+        },
+        {
+          "name": "Update User Status",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Accept", "value": "application/json" }, { "key": "Content-Type", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{base_url}}/admin/users/{{user_id}}/status", "host": ["{{base_url}}"], "path": ["admin", "users", "{{user_id}}", "status"] },
+            "body": { "mode": "raw", "raw": "{\n  \"status\": \"blocked\"\n}" }
+          }
+        },
+        {
+          "name": "List Agencies (all statuses)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": {
+              "raw": "{{base_url}}/admin/agencies",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "agencies"],
+              "query": [{ "key": "status", "value": "pending", "disabled": true, "description": "pending | approved | rejected" }]
+            }
+          }
+        },
+        {
+          "name": "Update Agency Status",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Accept", "value": "application/json" }, { "key": "Content-Type", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{base_url}}/admin/agencies/{{agency_id}}/status", "host": ["{{base_url}}"], "path": ["admin", "agencies", "{{agency_id}}", "status"] },
+            "body": { "mode": "raw", "raw": "{\n  \"status\": \"approved\"\n}" }
+          }
+        },
+        {
+          "name": "Approve Agency Changes",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Accept", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{base_url}}/admin/agencies/{{agency_id}}/approve-changes", "host": ["{{base_url}}"], "path": ["admin", "agencies", "{{agency_id}}", "approve-changes"] }
+          }
+        },
+        {
+          "name": "Reject Agency Changes",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Accept", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{base_url}}/admin/agencies/{{agency_id}}/reject-changes", "host": ["{{base_url}}"], "path": ["admin", "agencies", "{{agency_id}}", "reject-changes"] }
+          }
+        },
+        {
+          "name": "Top Up Agency Balance",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Accept", "value": "application/json" }, { "key": "Content-Type", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{base_url}}/admin/agencies/{{agency_id}}/top-up", "host": ["{{base_url}}"], "path": ["admin", "agencies", "{{agency_id}}", "top-up"] },
+            "body": { "mode": "raw", "raw": "{\n  \"amount\": 1000\n}" }
+          }
+        },
+        {
+          "name": "Platform Stats",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }, { "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{base_url}}/admin/stats", "host": ["{{base_url}}"], "path": ["admin", "stats"] }
+          }
+        }
+      ]
+    }
+  ]
+}
